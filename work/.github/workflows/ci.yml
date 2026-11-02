@@ -1,0 +1,26 @@
+name: Week8 ASP.NET Core + SignalR CI
+on:
+  push:
+  pull_request:
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - run: dotnet restore backend/Logistics.Api.csproj
+      - run: dotnet build backend/Logistics.Api.csproj -c Release --no-restore
+      - run: dotnet test tests/Logistics.Tests.csproj -c Release
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install
+        working-directory: frontend
+      - run: npm run build
+        working-directory: frontend

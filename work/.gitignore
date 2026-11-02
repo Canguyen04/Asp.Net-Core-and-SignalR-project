@@ -1,0 +1,8 @@
+**/node_modules/
+**/bin/
+**/obj/
+**/.env.local
+**/logistics-week8.db*
+**/uploads/
+**/dist/
+*.user
