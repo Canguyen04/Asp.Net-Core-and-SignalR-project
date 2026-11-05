@@ -34,14 +34,145 @@ const paths={
   lightning:<path d="m13 2-9 11h7l-1 9 10-12h-7z"/>,
   phone:<path d="M22 16.9v3a2 2 0 0 1-2.2 2A19 19 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7L9.7 7a2 2 0 0 1-.6 1.7L7.3 10a16 16 0 0 0 6.7 6.7l1.3-1.8a2 2 0 0 1 1.7-.6l3.3.6a2 2 0 0 1 1.7 2z"/>,
 };
-export function Icon({name='package',size=20,className='',...props}){return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.85" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true" {...props}>{paths[name]||paths.package}</svg>}
+
+export function Icon({name='package',size=20,className='',...props}){
+  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.85" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true" {...props}>{paths[name]||paths.package}</svg>;
+}
+
 export const money=(value)=>`${Number(value||0).toLocaleString('vi-VN')} ₫`;
 export const dateVi=(date)=>date ? new Date(date).toLocaleString('vi-VN') : '—';
 export const STATUS={pending:['Chờ tài xế','pending'],accepted:['Đã nhận đơn','info'],arrived_pickup:['Đã tới điểm lấy','info'],delivering:['Đang giao hàng','warning'],completed:['Hoàn thành','success'],cancelled:['Đã hủy','danger']};
-export function StatusBadge({status}){const [label,type]=STATUS[status]||[status||'Không rõ','neutral'];return <span className={`status-pill status-${type}`}><span className="status-dot"/>{label}</span>}
-export function PageHeader({eyebrow, title,description,actions}){return <div className="page-header"><div><p className="eyebrow">{eyebrow||'TỔNG QUAN HỆ THỐNG'}</p><h1>{title}</h1>{description&&<p className="page-description">{description}</p>}</div>{actions&&<div className="page-actions">{actions}</div>}</div>}
-export function StatCard({label,value,note,icon='package',tone='orange'}){return <div className="metric-card"><div className="metric-top"><span>{label}</span><span className={`metric-icon metric-${tone}`}><Icon name={icon} size={20}/></span></div><div className="metric-value">{value}</div><div className="metric-note">{note}</div></div>}
-export function EmptyState({icon='package',title='Chưa có dữ liệu',description,action}){return <div className="empty-state"><span className="empty-icon"><Icon name={icon} size={28}/></span><h3>{title}</h3><p>{description||'Dữ liệu sẽ xuất hiện tại đây khi có hoạt động mới.'}</p>{action}</div>}
-export function OrderRoute({pickup,dropoff}){return <div className="route-addresses"><div className="route-entry"><span className="route-pin start"/><span className="ellipsis-2">{pickup||'Chưa có địa chỉ lấy hàng'}</span></div><div className="route-entry"><span className="route-pin end"/><span className="ellipsis-2">{dropoff||'Chưa có địa chỉ giao hàng'}</span></div></div>}
-export function OrderListTable({orders=[],empty='Không có đơn hàng phù hợp.'}){const navigate=useNavigate();return <div className="table-scroll"><table className="data-table"><thead><tr><th>ĐƠN HÀNG</th><th>LỘ TRÌNH</th><th>TRẠNG THÁI</th><th>CƯỚC PHÍ</th><th></th></tr></thead><tbody>{orders.length?orders.map(o=><tr key={o.id} onClick={()=>navigate(`/order/${o.id}`)} className="clickable-row"><td><strong className="order-number">#{o.id}</strong><small className="table-muted">{o.serviceName||o.serviceType}</small></td><td className="route-cell"><OrderRoute pickup={o.pickup} dropoff={o.dropoff}/></td><td><StatusBadge status={o.status}/></td><td><strong>{money(o.totalPrice)}</strong></td><td><Icon name="chevron" size={17}/></td></tr>):<tr><td colSpan="5" className="text-center py-5 text-muted">{empty}</td></tr>}</tbody></table></div>}
+
+export function StatusBadge({status}){
+  const [label,type]=STATUS[status]||[status||'Không rõ','neutral'];
+  return <span className={`status-pill status-${type}`}><span className="status-dot"/>{label}</span>;
+}
+
+export function PageHeader({eyebrow, title,description,actions}){
+  return <div className="page-header"><div><p className="eyebrow">{eyebrow||'TỔNG QUAN HỆ THỐNG'}</p><h1>{title}</h1>{description&&<p className="page-description">{description}</p>}</div>{actions&&<div className="page-actions">{actions}</div>}</div>;
+}
+
+export function StatCard({label,value,note,icon='package',tone='orange',loading=false}){
+  if (loading) {
+    return (
+      <div className="metric-card">
+        <div className="metric-top">
+          <Skeleton width="55%" height={13} />
+          <Skeleton width={38} height={38} radius={10} />
+        </div>
+        <Skeleton width="75%" height={28} className="my-2" />
+        <Skeleton width="45%" height={11} />
+      </div>
+    );
+  }
+  return <div className="metric-card"><div className="metric-top"><span>{label}</span><span className={`metric-icon metric-${tone}`}><Icon name={icon} size={20}/></span></div><div className="metric-value">{value}</div><div className="metric-note">{note}</div></div>;
+}
+
+export function Skeleton({ width = '100%', height = 16, radius = 8, className = '', style = {} }) {
+  return <span className={`mf-skeleton ${className}`} style={{ width, height, borderRadius: radius, ...style }} aria-hidden="true" />;
+}
+
+export function MetricSkeletonGrid({ count = 4 }) {
+  return (
+    <div className="metrics-grid">
+      {Array.from({ length: count }).map((_, i) => <StatCard key={i} loading />)}
+    </div>
+  );
+}
+
+export function OrderCardSkeletonList({ count = 3 }) {
+  return (
+    <div className="d-flex flex-column gap-3">
+      {Array.from({ length: count }).map((_, i) => (
+        <div key={i} className="order-list-card">
+          <div className="d-flex justify-content-between align-items-center mb-3">
+            <Skeleton width={120} height={18} />
+            <Skeleton width={90} height={24} radius={7} />
+          </div>
+          <div className="d-flex flex-column gap-2 mb-3">
+            <Skeleton width="85%" height={14} />
+            <Skeleton width="70%" height={14} />
+          </div>
+          <div className="d-flex justify-content-between align-items-center pt-3 border-top">
+            <Skeleton width={110} height={22} />
+            <Skeleton width={115} height={38} radius={9} />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export function TableSkeleton({ rows = 5, cols = 5 }) {
+  return (
+    <div className="surface-body">
+      <div className="d-flex flex-column gap-3">
+        {Array.from({ length: rows }).map((_, r) => (
+          <div key={r} className="d-flex gap-3 align-items-center py-2 border-bottom">
+            {Array.from({ length: cols }).map((__, c) => (
+              <Skeleton key={c} width={`${Math.max(15, 100 / cols)}%`} height={16} />
+            ))}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export function EmptyState({icon='package',title='Chưa có dữ liệu',description,action}){
+  return <div className="empty-state"><span className="empty-icon"><Icon name={icon} size={28}/></span><h3>{title}</h3><p>{description||'Dữ liệu sẽ xuất hiện tại đây khi có hoạt động mới.'}</p>{action}</div>;
+}
+
+export function OrderRoute({pickup,dropoff,waypoints=[]}){
+  return (
+    <div className="route-addresses">
+      <div className="route-entry"><span className="route-pin start"/><span className="ellipsis-2">{pickup||'Chưa có địa chỉ lấy hàng'}</span></div>
+      {waypoints.map((wp, idx) => wp?.address ? (
+        <div key={idx} className="route-entry"><span className="route-pin mid"/><span className="ellipsis-2">Điểm dừng {idx + 1}: {wp.address}</span></div>
+      ) : null)}
+      <div className="route-entry"><span className="route-pin end"/><span className="ellipsis-2">{dropoff||'Chưa có địa chỉ giao hàng'}</span></div>
+    </div>
+  );
+}
+
+export function OrderListTable({orders=[],empty='Không có đơn hàng phù hợp.', loading=false}){
+  const navigate=useNavigate();
+  if (loading) return <TableSkeleton rows={5} cols={4} />;
+  return <>
+    {/* Giao diện Bảng trên Desktop */}
+    <div className="table-scroll desktop-only-table">
+      <table className="data-table">
+        <thead><tr><th>ĐƠN HÀNG</th><th>LỘ TRÌNH</th><th>TRẠNG THÁI</th><th>CƯỚC PHÍ</th><th></th></tr></thead>
+        <tbody>
+          {orders.length ? orders.map(o => (
+            <tr key={o.id} onClick={()=>navigate(`/order/${o.id}`)} className="clickable-row">
+              <td><strong className="order-number">#{o.id}</strong><small className="table-muted">{o.serviceName||o.serviceType}</small></td>
+              <td className="route-cell"><OrderRoute pickup={o.pickup} dropoff={o.dropoff}/></td>
+              <td><StatusBadge status={o.status}/></td>
+              <td><strong>{money(o.totalPrice)}</strong></td>
+              <td><Icon name="chevron" size={17}/></td>
+            </tr>
+          )) : <tr><td colSpan="5" className="text-center py-5 text-muted">{empty}</td></tr>}
+        </tbody>
+      </table>
+    </div>
+    {/* Giao diện Thẻ (Card) tối ưu cho Điện thoại */}
+    <div className="mobile-only-cards p-3 pt-0">
+      {orders.length ? orders.map(o => (
+        <article key={o.id} className="order-list-card mb-2" onClick={()=>navigate(`/order/${o.id}`)}>
+          <div className="d-flex justify-content-between align-items-center mb-2">
+            <div><strong className="order-number">#{o.id}</strong> <small className="text-muted ms-1">· {o.serviceName||o.serviceType}</small></div>
+            <StatusBadge status={o.status}/>
+          </div>
+          <OrderRoute pickup={o.pickup} dropoff={o.dropoff}/>
+          <div className="d-flex justify-content-between align-items-center mt-3 pt-2 border-top">
+            <strong style={{color:'#ef742a', fontSize:14}}>{money(o.totalPrice)}</strong>
+            <span className="small text-muted d-flex align-items-center gap-1">Chi tiết <Icon name="chevron" size={14}/></span>
+          </div>
+        </article>
+      )) : <div className="text-center py-4 text-muted small">{empty}</div>}
+    </div>
+  </>;
+}
+
 export function downloadCsv(filename,rows){const cell=v=>`"${String(v??'').replaceAll('"','""')}"`;const csv='\uFEFF'+rows.map(r=>r.map(cell).join(',')).join('\r\n');const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));const a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url)}
